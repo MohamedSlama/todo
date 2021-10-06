@@ -5,14 +5,17 @@ class NotificationScreen extends StatefulWidget {
 
   @override
   _NotificationScreenState createState() => _NotificationScreenState();
-}fas|"l';dksghd;lskjh;gl"
+}
 
 class _NotificationScreenState extends State<NotificationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(),
-      body: Container(),
+      body: Container(
+        color: Colors.black,
+        child: const Text('This is the notification screen'),
+      ),
     );
   }
 }
