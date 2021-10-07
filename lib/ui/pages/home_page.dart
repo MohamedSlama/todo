@@ -5,6 +5,7 @@ import 'package:todo/ui/size_config.dart';
 import 'package:todo/ui/widgets/button.dart';
 import 'package:todo/ui/widgets/input_field.dart';
 
+import '../theme.dart';
 import 'add_task_page.dart';
 import 'notification_screen.dart';
 
@@ -20,16 +21,29 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     SizeConfig().init(context);
     return Scaffold(
+      backgroundColor: context.theme.backgroundColor,
       appBar: AppBar(
-        //? Testing UI with changing theme mode
         leading: IconButton(
-          onPressed: () {
-            ThemeServices().changeThemeMode();
-            Get.to(const NotificationScreen(
-                payload: 'Hello| notification screen|27/12/2012'));
-          },
-          icon: const Icon(Icons.nightlight_round),
+          onPressed: () => ThemeServices().changeThemeMode(),
+          icon: Icon(
+            Get.isDarkMode
+                ? Icons.wb_sunny_outlined
+                : Icons.nightlight_round_outlined,
+            color: Get.isDarkMode ? Colors.white : darkGreyClr,
+            size: 24,
+          ),
         ),
+        elevation: 0,
+        backgroundColor: context.theme.backgroundColor,
+        actions: const [
+          //? Avatar image
+          CircleAvatar(
+            backgroundImage: AssetImage('images/person.jpeg'),
+            radius: 18,
+          ),
+          //? Space between screen border and avatar
+          SizedBox(width: 20),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -41,11 +55,6 @@ class _HomePageState extends State<HomePage> {
                 onTap: () {
                   Get.to(const AddTaskPage());
                 }),
-            const InputField(
-              title: 'Title',
-              hint: 'Write something here !!',
-              widget: Icon(Icons.access_alarm),
-            ),
           ],
         ),
       ),
