@@ -5,6 +5,7 @@ import 'package:todo/ui/size_config.dart';
 import 'package:todo/ui/widgets/button.dart';
 import 'package:todo/ui/widgets/input_field.dart';
 
+import 'add_task_page.dart';
 import 'notification_screen.dart';
 
 class HomePage extends StatefulWidget {
@@ -35,7 +36,11 @@ class _HomePageState extends State<HomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            MyButton(label: 'Add Task', onTap: () {}),
+            MyButton(
+                label: 'Add Task',
+                onTap: () {
+                  Get.to(const AddTaskPage());
+                }),
             const InputField(
               title: 'Title',
               hint: 'Write something here !!',
