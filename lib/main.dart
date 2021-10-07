@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
 import 'ui/pages/home_page.dart';
+import 'ui/pages/notification_screen.dart';
 
 void main() {
   SystemChrome.setSystemUIOverlayStyle(
@@ -18,11 +20,15 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return GetMaterialApp(
       title: 'Flutter Demo',
+      theme: ThemeData(
+        primaryColor: Colors.teal,
+        backgroundColor: Colors.teal,
+      ),
       debugShowCheckedModeBanner: false,
       showPerformanceOverlay: false,
-      home: HomePage(),
+      home: const NotificationScreen(payload: 'Hello| notification screen|27/12/2012'),
     );
   }
 }
