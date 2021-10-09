@@ -6,15 +6,16 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:todo/controllers/task_controller.dart';
+import 'package:todo/models/task.dart';
 import 'package:todo/services/notification_services.dart';
 import 'package:todo/services/theme_services.dart';
 import 'package:todo/ui/size_config.dart';
 import 'package:todo/ui/widgets/button.dart';
 import 'package:todo/ui/widgets/input_field.dart';
+import 'package:todo/ui/widgets/task_tile.dart';
 
 import '../theme.dart';
 import 'add_task_page.dart';
-import 'notification_screen.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -97,7 +98,9 @@ class _HomePageState extends State<HomePage> {
             //? Vertical Space above tasks
             const SizedBox(height: 6),
             //TODO: _showTasks
-            _showTasks(),
+            //- isTask pass true
+            //- noTask pass false
+            _showTasks(isTask: true),
           ],
         ),
       ),
@@ -151,7 +154,19 @@ class _HomePageState extends State<HomePage> {
       );
 
   //? invoke tasks
-  _showTasks() => _noTaskMessage();
+  _showTasks({required isTask}) => isTask
+      ? TaskTile(
+          task: Task(
+            id: 1,
+            title: 'Title 1',
+            note: 'Note something',
+            isCompleted: 0,
+            startTime: '8:18',
+            endTime: '2:40',
+            color: 2,
+          ),
+        )
+      : _noTaskMessage();
 
   //? no task
   _noTaskMessage() => Stack(

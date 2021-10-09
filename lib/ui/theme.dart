@@ -77,5 +77,19 @@ TextStyle get body2Style => GoogleFonts.lato(
 //? date picker text style
 TextStyle datePickerStyle({required double? size}) => GoogleFonts.lato(
       textStyle: TextStyle(
-          color: Colors.grey, fontSize: size?? 0, fontWeight: FontWeight.w600),
+          color: Colors.grey, fontSize: size ?? 0, fontWeight: FontWeight.w600),
+    );
+
+//? rotated task status text style
+TextStyle rotatedTextStyle() => GoogleFonts.lato(
+      textStyle: const TextStyle(
+          color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+    );
+
+//? task tile text style
+TextStyle taskTileTextStyle({required double size, bold, color}) => GoogleFonts.lato(
+      textStyle: TextStyle(
+          color: color ?? Colors.grey[100],
+          fontSize: size,
+          fontWeight: bold ?? FontWeight.normal),
     );
