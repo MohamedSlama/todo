@@ -1,9 +1,12 @@
+import 'dart:io';
+
 import 'package:date_picker_timeline/date_picker_timeline.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:todo/controllers/task_controller.dart';
+import 'package:todo/services/notification_services.dart';
 import 'package:todo/services/theme_services.dart';
 import 'package:todo/ui/size_config.dart';
 import 'package:todo/ui/widgets/button.dart';
@@ -21,8 +24,22 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  // TODO after
   final TaskController _taskController = Get.put(TaskController());
   DateTime _selectedDate = DateTime.now();
+
+  //? Notification Helper
+  late NotifyHelper notifyHelper;
+
+  @override
+  void initState() {
+    super.initState();
+    notifyHelper = NotifyHelper();
+    // //? Check if platform is ios request permissions
+    // if (Platform.isIOS) notifyHelper.requestIOSPermission();
+    //? Initialize notification for usage
+    notifyHelper.initializationNotification();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +48,23 @@ class _HomePageState extends State<HomePage> {
       backgroundColor: context.theme.backgroundColor,
       appBar: AppBar(
         leading: IconButton(
-          onPressed: () => ThemeServices().changeThemeMode(),
+          /*
+          TODO
+          + change theme
+          + display notification
+          + display another one after 5 seconds
+          */
+          onPressed: () {
+            //? Change theme
+            ThemeServices().changeThemeMode();
+            //? Display Notification
+            notifyHelper.displayNotification(
+                title: 'Theme changed', body: 'App theme has been changed!');
+            //? Schedule another notification after 5 seconds
+            //+ For testing scheduled
+            notifyHelper.scheduledNotification();
+          },
+          // onPressed: () => ThemeServices().changeThemeMode(),
           icon: Icon(
             Get.isDarkMode
                 ? Icons.wb_sunny_outlined
