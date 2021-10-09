@@ -73,3 +73,9 @@ TextStyle get body2Style => GoogleFonts.lato(
           fontSize: 14,
           fontWeight: FontWeight.w400),
     );
+
+//? date picker text style
+TextStyle datePickerStyle({required double? size}) => GoogleFonts.lato(
+      textStyle: TextStyle(
+          color: Colors.grey, fontSize: size?? 0, fontWeight: FontWeight.w600),
+    );
