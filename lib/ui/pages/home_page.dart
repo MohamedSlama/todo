@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:date_picker_timeline/date_picker_timeline.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -86,23 +87,13 @@ class _HomePageState extends State<HomePage> {
           SizedBox(width: 20),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            ////TODO: _addTaskBar
-            _addTaskBar(),
-            //TODO: _addDateBar
-            _addDateBar(),
-            //? Vertical Space above tasks
-            const SizedBox(height: 6),
-            //TODO: _showTasks
-            //- isTask pass true
-            //- noTask pass false
-            _showTasks(isTask: true),
-          ],
-        ),
+      body: Column(
+        children: [
+          _addTaskBar(),
+          _addDateBar(),
+          const SizedBox(height: 6),
+          _taskController.takList.isNotEmpty?_showTasks():_noTaskMessage(),
+        ],
       ),
     );
   }
@@ -154,19 +145,34 @@ class _HomePageState extends State<HomePage> {
       );
 
   //? invoke tasks
-  _showTasks({required isTask}) => isTask
-      ? TaskTile(
-          task: Task(
-            id: 1,
-            title: 'Title 1',
-            note: 'Note something',
-            isCompleted: 0,
-            startTime: '8:18',
-            endTime: '2:40',
-            color: 2,
-          ),
-        )
-      : _noTaskMessage();
+  _showTasks() => Expanded(
+        child: ListView.builder(
+          scrollDirection: (SizeConfig.orientation == Orientation.landscape)
+              ? Axis.horizontal
+              : Axis.vertical,
+          itemBuilder: (context, index) {
+            var _task = _taskController.takList[index];
+            return AnimationConfiguration.staggeredList(
+              duration: const Duration(milliseconds: 800),
+              position: index,
+              child: SlideAnimation(
+                horizontalOffset: 300,
+                child: FadeInAnimation(
+                  child: GestureDetector(
+                    onTap: () {
+                      _showBottomSheet(context, _task);
+                    },
+                    child: TaskTile(
+                      task: _task,
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+          itemCount: _taskController.takList.length,
+        ),
+      );
 
   //? no task
   _noTaskMessage() => Stack(
@@ -211,5 +217,94 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
         ],
+      );
+
+  //? show bottom sheet
+  _showBottomSheet(BuildContext context, Task task) {
+    Get.bottomSheet(
+      SingleChildScrollView(
+        child: Container(
+          padding: const EdgeInsets.only(top: 4),
+          width: SizeConfig.screenWidth,
+          height: (SizeConfig.orientation == Orientation.landscape)
+              ? (task.isCompleted == 1
+                  ? SizeConfig.screenHeight * 0.6
+                  : SizeConfig.screenHeight * 0.8)
+              : (task.isCompleted == 1
+                  ? SizeConfig.screenHeight * 0.30
+                  : SizeConfig.screenHeight * 0.39),
+          color: Get.isDarkMode ? darkHeaderClr : Colors.white,
+          child: Column(
+            children: [
+              Flexible(
+                child: Container(
+                  height: 6,
+                  width: 120,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    color: Get.isDarkMode ? Colors.grey[600] : Colors.grey[300],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              task.isCompleted == 1
+                  ? Container()
+                  : _buildBottomSheet(
+                      label: 'Task Completed',
+                      onTap: () {
+                        Get.back();
+                      },
+                      color: primaryClr),
+              _buildBottomSheet(
+                  label: 'Delete Task',
+                  onTap: () {
+                    Get.back();
+                  },
+                  color: primaryClr),
+              Divider(color: Get.isDarkMode ? Colors.grey : darkGreyClr),
+              _buildBottomSheet(
+                  label: 'Cancel',
+                  onTap: () {
+                    Get.back();
+                  },
+                  color: primaryClr),
+              const SizedBox(height: 20),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  //? build bottom sheet item
+  _buildBottomSheet({
+    required String label,
+    required Function() onTap,
+    required Color color,
+    bool isClose = false,
+  }) =>
+      GestureDetector(
+        onTap: onTap,
+        child: Container(
+          margin: const EdgeInsets.symmetric(vertical: 4),
+          height: 65,
+          width: SizeConfig.screenWidth * 0.9,
+          decoration: BoxDecoration(
+            border: Border.all(
+              width: 2,
+              color: isClose
+                  ? (Get.isDarkMode ? Colors.grey[600]! : Colors.grey[300]!)
+                  : color,
+            ),
+            borderRadius: BorderRadius.circular(20),
+            color: isClose ? Colors.transparent : color,
+          ),
+          child: Center(
+            child: Text(label,
+                style: isClose
+                    ? titleStyle
+                    : titleStyle.copyWith(color: Colors.white)),
+          ),
+        ),
       );
 }
