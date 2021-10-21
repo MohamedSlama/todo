@@ -2,5 +2,5 @@
 
 A new Flutter project under development.
 
-## Getting Started
-Simple Todo list app.
+## Agenda
+ToDo App <a href="https://trello.com/b/PRk35A7Y/todo-app">link</a>.
