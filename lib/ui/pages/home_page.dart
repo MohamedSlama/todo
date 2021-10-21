@@ -50,21 +50,17 @@ class _HomePageState extends State<HomePage> {
       backgroundColor: context.theme.backgroundColor,
       appBar: AppBar(
         leading: IconButton(
-          /*
-          TODO
-          + change theme
-          + display notification
-          + display another one after 5 seconds
-          */
           onPressed: () {
             //? Change theme
             ThemeServices().changeThemeMode();
-            //? Display Notification
-            notifyHelper.displayNotification(
-                title: 'Theme changed', body: 'App theme has been changed!');
-            //? Schedule another notification after 5 seconds
-            //+ For testing scheduled
-            notifyHelper.scheduledNotification();
+
+
+            // //? Display Notification
+            // notifyHelper.displayNotification(
+            //     title: 'Theme changed', body: 'App theme has been changed!');
+            // //? Schedule another notification after 5 seconds
+            // //+ For testing scheduled
+            // notifyHelper.scheduledNotification();
           },
           // onPressed: () => ThemeServices().changeThemeMode(),
           icon: Icon(
@@ -151,7 +147,16 @@ class _HomePageState extends State<HomePage> {
               ? Axis.horizontal
               : Axis.vertical,
           itemBuilder: (context, index) {
+            //? task item from tasks list
             var _task = _taskController.takList[index];
+
+            //? Get hour and minutes
+            int hour = int.parse(_timeConverter(_task.startTime!).toString().split(':')[0]);
+            int minutes = int.parse(_timeConverter(_task.startTime!).toString().split(':')[1]);
+
+            //? Schedule notification
+            notifyHelper.scheduledNotification(hour,minutes,_task);
+
             return AnimationConfiguration.staggeredList(
               duration: const Duration(milliseconds: 800),
               position: index,
@@ -307,4 +312,9 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
       );
+
+  _timeConverter(String time){
+    var date = DateFormat.jm().parse(time);
+    return DateFormat('HH:mm').format(date);
+  }
 }

@@ -2,9 +2,12 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_native_timezone/flutter_native_timezone.dart';
 import 'package:get/get.dart';
+import 'package:rxdart/rxdart.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
+import 'package:todo/models/task.dart';
 import 'package:todo/ui/pages/notification_screen.dart';
 
 class NotifyHelper {
@@ -12,10 +15,19 @@ class NotifyHelper {
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
 
+  //+ Flag new
+  String selectedNotificationPayload = '';
+  final BehaviorSubject<String> selectNotificationSubject =
+      BehaviorSubject<String>();
+
   initializationNotification() async {
     //? Time zone initialization for scheduled notification
     tz.initializeTimeZones();
     // tz.setLocalLocation(tz.getLocation(timeZoneName));
+
+    //+ Flag new
+    _configureSelectNotificationSubject();
+    await _configureLocalTimeZone();
 
     /*
     TODO initialize notification settings
@@ -47,10 +59,13 @@ class NotifyHelper {
         onSelectNotification: (String? payload) async {
       //? For testing we send constant values
       // selectNotification(payload!);
-      selectNotification('hello|mohamed|salama');
+      // selectNotification('hello|mohamed|salama');
+      //+ Flag new
+      selectNotificationSubject.add(payload!);
     });
   }
 
+  //! Remove
   //? Notification screen
   void selectNotification(String payload) async {
     // debugPrint('notification payload: $payload');
@@ -89,21 +104,51 @@ class NotifyHelper {
   }
 
   //? Scheduled notification
-  scheduledNotification() async {
-    //? This is a dummy notification for testing purpose
-    //TODO should invoke task parameter
+  scheduledNotification(int hour, int minutes, Task task) async {
     await flutterLocalNotificationsPlugin.zonedSchedule(
-        0,
-        'scheduled title',
-        'scheduled body',
-        tz.TZDateTime.now(tz.local).add(const Duration(seconds: 5)),
-        const NotificationDetails(
-            android: AndroidNotificationDetails(
-                'your channel id', 'your channel name',
-                channelDescription: 'your channel description')),
-        androidAllowWhileIdle: true,
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime);
+      //+ Flag new
+      task.id!,
+      task.title!,
+      task.note!,
+      // tz.TZDateTime.now(tz.local).add(const Duration(seconds: 5)),
+      _nextInstanceOfTenAM(hour, minutes),
+      const NotificationDetails(
+          android: AndroidNotificationDetails(
+              'your channel id', 'your channel name',
+              channelDescription: 'your channel description')),
+      androidAllowWhileIdle: true,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
+      //+ Flag new
+      matchDateTimeComponents: DateTimeComponents.time,
+      payload: '${task.title}|${task.note}|${task.startTime}|',
+    );
+  }
+
+  //+ Flag new
+  _nextInstanceOfTenAM(int hour, int minutes) {
+    final tz.TZDateTime now = tz.TZDateTime.now(tz.local);
+    tz.TZDateTime scheduledDate =
+        tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minutes);
+    if (scheduledDate.isBefore(now)) {
+      scheduledDate = scheduledDate.add(const Duration(days: 1));
+    }
+    return scheduledDate;
+  }
+
+  //+ Flag new
+  Future<void> _configureLocalTimeZone() async {
+    tz.initializeTimeZones();
+    final String timeZoneName = await FlutterNativeTimezone.getLocalTimezone();
+    tz.setLocalLocation(tz.getLocation(timeZoneName));
+  }
+
+  //+ Flag new
+  void _configureSelectNotificationSubject() {
+    selectNotificationSubject.stream.listen((String payload) async {
+      debugPrint('My payload is ' + payload);
+      await Get.to(() => NotificationScreen(payload: payload));
+    });
   }
 
 //! Under testing i think is duplicated
