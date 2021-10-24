@@ -1,47 +1,31 @@
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
+import 'package:todo/db/db_helper.dart';
 import 'package:todo/models/task.dart';
 
 class TaskController extends GetxController {
-  final takList = <Task>[
-    Task(
-        title: 'Title 1',
-        note: 'Note something',
-        isCompleted: 1,
-        startTime: DateFormat('hh:mm a')
-            .format(DateTime.now().add(const Duration(minutes: 1))),
-        color: 0)
-  ];
+  //? obs to change list to stream => converted to rxList
+  final RxList<Task> taskList = <Task>[].obs;
 
-  //   //? Dummy Data for testing
-  //   Task(
-  //     title: 'Title 1',
-  //     note: 'Note something',
-  //     isCompleted: 0,
-  //     startTime: '8:10',
-  //     endTime: '10:00',
-  //     color: 0
-  //   ),Task(
-  //       title: 'Title 2',
-  //       note: 'Note something',
-  //       isCompleted: 1,
-  //       startTime: '8:10',
-  //       endTime: '10:00',
-  //       color: 1
-  //   ),Task(
-  //       title: 'Title 3',
-  //       note: 'Note something',
-  //       isCompleted: 2,
-  //       startTime: '8:10',
-  //       endTime: '10:00',
-  //       color: 2
-  //   )
-  @override
-  void onReady() {
-    super.onReady();
+  //?? return all tasks
+  Future<void> getTasks() async{
+    final tasks = await DBHelper.query();
+    taskList.assignAll(tasks.map((e) => Task.fromMap(e)).toList());
   }
 
-  addTask({Task? task}) => null;
+  //? add task to database
+  Future<int> addTask({Task? task}) {
+    return DBHelper.insert(task);
+  }
 
-  getTasks() => null;
+  //? delete task from database
+  deleteTasks({Task? task}) async{
+    await DBHelper.delete(task);
+    getTasks();
+  }
+
+  //? update database
+  markTaskCompleted(int id) async{
+    await DBHelper.update(id);
+    getTasks();
+  }
 }

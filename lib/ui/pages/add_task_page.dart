@@ -194,6 +194,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
                 //? Color area
                 children: [
                   Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       //? Title
                       Text('Color', style: titleStyle),
