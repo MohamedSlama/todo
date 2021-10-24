@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:todo/controllers/task_controller.dart';
+import 'package:todo/models/task.dart';
 import 'package:todo/ui/theme.dart';
 import 'package:todo/ui/widgets/button.dart';
 import 'package:todo/ui/widgets/input_field.dart';
@@ -20,7 +21,8 @@ class _AddTaskPageState extends State<AddTaskPage> {
   final TextEditingController _noteController = TextEditingController();
 
   final DateTime _selectedDate = DateTime.now();
-  final String _startTime = DateFormat('hh:mm a').format(DateTime.now()).toString();
+  final String _startTime =
+      DateFormat('hh:mm a').format(DateTime.now()).toString();
   final String _endTime = DateFormat('hh:mm a')
       .format(DateTime.now().add(const Duration(minutes: 15)))
       .toString();
@@ -202,7 +204,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
                     ],
                   ),
                   //? Add task button
-                  MyButton(label: 'Create Task', onTap: () => Get.back())
+                  MyButton(label: 'Create Task', onTap: () => _validateDate())
                 ],
               ),
             ],
@@ -210,6 +212,44 @@ class _AddTaskPageState extends State<AddTaskPage> {
         ),
       ),
     );
+  }
+
+  _validateDate() {
+    if (_titleController.text.isNotEmpty && _noteController.text.isNotEmpty) {
+      _addTasksToDb();
+      Get.back();
+    } else if (_titleController.text.isNotEmpty ||
+        _noteController.text.isNotEmpty) {
+      Get.snackbar(
+        'Required',
+        'All fields are required!!',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.white,
+        colorText: pinkClr,
+        icon: const Icon(Icons.warning_amber_rounded, color: Colors.red),
+      );
+    } else {
+      print('########### Something went wrong ###########');
+    }
+  }
+
+  _addTasksToDb() async {
+    int value = await _taskController.addTask(
+      task: Task(
+        //? title controller is input text controller
+        title: _titleController.text,
+        note: _noteController.text,
+        isCompleted: 0,
+        date: DateFormat.yMd().format(_selectedDate),
+        startTime: _startTime,
+        endTime: _endTime,
+        color: _selectedColor,
+        remind: _selectedRemind,
+        repeat: _selectedRepeat,
+      ),
+    );
+    //? should print task id in DB
+    print('Done adding value: $value');
   }
 
   _colorPalette() => Wrap(
