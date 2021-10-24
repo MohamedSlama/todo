@@ -20,10 +20,10 @@ class _AddTaskPageState extends State<AddTaskPage> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _noteController = TextEditingController();
 
-  final DateTime _selectedDate = DateTime.now();
-  final String _startTime =
+  DateTime _selectedDate = DateTime.now();
+  String _startTime =
       DateFormat('hh:mm a').format(DateTime.now()).toString();
-  final String _endTime = DateFormat('hh:mm a')
+  String _endTime = DateFormat('hh:mm a')
       .format(DateTime.now().add(const Duration(minutes: 15)))
       .toString();
   int _selectedRemind = 5;
@@ -75,7 +75,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
                 title: 'Date',
                 hint: DateFormat.yMd().format(_selectedDate),
                 widget: IconButton(
-                  onPressed: () {},
+                  onPressed: () => _getDate(),
                   icon: const Icon(
                     Icons.calendar_today_outlined,
                     color: Colors.grey,
@@ -91,7 +91,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
                       title: 'Start Time',
                       hint: _startTime,
                       widget: IconButton(
-                        onPressed: () {},
+                        onPressed: () => _getTime(isStartTime: true),
                         icon: const Icon(
                           Icons.access_time_rounded,
                           color: Colors.grey,
@@ -109,7 +109,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
                       title: 'End Time',
                       hint: _endTime,
                       widget: IconButton(
-                        onPressed: () {},
+                        onPressed: () => _getTime(isStartTime: false),
                         icon: const Icon(
                           Icons.access_time_rounded,
                           color: Colors.grey,
@@ -233,6 +233,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
     }
   }
 
+  //? add task button
   _addTasksToDb() async {
     int value = await _taskController.addTask(
       task: Task(
@@ -278,4 +279,36 @@ class _AddTaskPageState extends State<AddTaskPage> {
           ),
         ),
       );
+
+  //? Date Picker
+  _getDate() async {
+    DateTime? _pickedDate = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(2015),
+      lastDate: DateTime(2030),
+    );
+    if (_pickedDate != null)
+      setState(() => _selectedDate = _pickedDate);
+    else
+      print('no choice !!');
+  }
+
+  //? Start time is true End time is false
+  _getTime({required bool isStartTime}) async {
+    TimeOfDay? _pickedTime = await showTimePicker(
+      context: context,
+      initialTime: isStartTime
+          ? TimeOfDay.fromDateTime(DateTime.now())
+          : TimeOfDay.fromDateTime(DateTime.now().add(
+              const Duration(minutes: 15),
+            )),
+    );
+    String _formattedTime = _pickedTime!.format(context);
+    if (isStartTime) setState(() => _startTime = _formattedTime);
+    else if (!isStartTime) setState(() => _endTime = _formattedTime);
+    else {
+      print('time canceled or something went wrong !!');
+    }
+  }
 }
