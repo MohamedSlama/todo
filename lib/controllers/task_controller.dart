@@ -41,5 +41,7 @@ class TaskController extends GetxController {
     super.onReady();
   }
 
+  addTask({Task? task}) => null;
+
   getTasks() => null;
 }
