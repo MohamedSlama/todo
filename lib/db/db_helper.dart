@@ -21,7 +21,7 @@ class DBHelper {
           await db.execute(
             'CREATE TABLE $_tableName'
             '(id INTEGER PRIMARY KEY AUTOINCREMENT, '
-            'title STRING, note TEXT, data STRING, '
+            'title STRING, note TEXT, date STRING, '
             'startTime STRING, endTime STRING, '
             'remind INTEGER, repeat STRING, '
             'color INTEGER, isCompleted INTEGER )',
@@ -56,7 +56,7 @@ class DBHelper {
       ''', [1, id]);
   }
 
-  static Future<List<Map<String, Object?>>> query(Task? task) async {
+  static Future<List<Map<String, Object?>>> query() async {
     debugPrint('query method called !!');
     return await _db!.query(_tableName);
   }

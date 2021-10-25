@@ -28,7 +28,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
       appBar: AppBar(
         leading: IconButton(
           onPressed: () => Get.back(),
-          icon: const Icon(Icons.arrow_back_ios),
+          icon: Icon(Icons.arrow_back_ios,color: Get.isDarkMode ? Colors.white : darkGreyClr),
         ),
         elevation: 0,
         backgroundColor: context.theme.backgroundColor,

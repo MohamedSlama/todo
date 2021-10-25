@@ -41,6 +41,8 @@ class _HomePageState extends State<HomePage> {
     // if (Platform.isIOS) notifyHelper.requestIOSPermission();
     //? Initialize notification for usage
     notifyHelper.initializationNotification();
+    //? Load tasks from db
+    _taskController.getTasks();
   }
 
   @override
@@ -53,7 +55,6 @@ class _HomePageState extends State<HomePage> {
           onPressed: () {
             //? Change theme
             ThemeServices().changeThemeMode();
-
 
             // //? Display Notification
             // notifyHelper.displayNotification(
@@ -88,11 +89,21 @@ class _HomePageState extends State<HomePage> {
           _addTaskBar(),
           _addDateBar(),
           const SizedBox(height: 6),
-          _taskController.takList.isNotEmpty?_showTasks():_noTaskMessage(),
+
+          Obx(() {
+            if (_taskController.taskList.isEmpty)
+              return _noTaskMessage();
+            else
+              return _showTasks();
+          }),
+          // _taskController.taskList.isNotEmpty ? _showTasks() : _noTaskMessage(),
         ],
       ),
     );
   }
+
+  //? refresh database tasks
+  Future<void> _onRefresh() async => _taskController.getTasks();
 
   //? invoke tasks bar
   _addTaskBar() => Container(
@@ -112,6 +123,7 @@ class _HomePageState extends State<HomePage> {
               label: '+ Add Task',
               onTap: () async {
                 await Get.to(const AddTaskPage());
+                _taskController.getTasks();
                 //Todo result from add task !!
               },
             )
@@ -142,40 +154,51 @@ class _HomePageState extends State<HomePage> {
 
   //? invoke tasks
   _showTasks() => Expanded(
-        child: ListView.builder(
-          scrollDirection: (SizeConfig.orientation == Orientation.landscape)
-              ? Axis.horizontal
-              : Axis.vertical,
-          itemBuilder: (context, index) {
-            //? task item from tasks list
-            var _task = _taskController.takList[index];
+        child: RefreshIndicator(
+          onRefresh: _onRefresh,
+          child: ListView.builder(
+            scrollDirection: (SizeConfig.orientation == Orientation.landscape)
+                ? Axis.horizontal
+                : Axis.vertical,
+            itemBuilder: (context, index) {
+              //? task item from tasks list
+              var _task = _taskController.taskList[index];
 
-            //? Get hour and minutes
-            int hour = int.parse(_timeConverter(_task.startTime!).toString().split(':')[0]);
-            int minutes = int.parse(_timeConverter(_task.startTime!).toString().split(':')[1]);
+              if (_task.repeat == 'Daily' ||
+                  _task.date == DateFormat.yMd().format(_selectedDate)) {
+                //? Get hour and minutes from string e.g 15:30
+                int hour = int.parse(
+                    _timeConverter(_task.startTime!).toString().split(':')[0]);
+                int minutes = int.parse(
+                    _timeConverter(_task.startTime!).toString().split(':')[1]);
 
-            //? Schedule notification
-            notifyHelper.scheduledNotification(hour,minutes,_task);
+                //? Schedule notification
+                notifyHelper.scheduledNotification(hour, minutes, _task);
 
-            return AnimationConfiguration.staggeredList(
-              duration: const Duration(milliseconds: 800),
-              position: index,
-              child: SlideAnimation(
-                horizontalOffset: 300,
-                child: FadeInAnimation(
-                  child: GestureDetector(
-                    onTap: () {
-                      _showBottomSheet(context, _task);
-                    },
-                    child: TaskTile(
-                      task: _task,
+                //? Animation from library flutter_staggered_animations
+                return AnimationConfiguration.staggeredList(
+                  duration: const Duration(milliseconds: 800),
+                  position: index,
+                  child: SlideAnimation(
+                    horizontalOffset: 300,
+                    child: FadeInAnimation(
+                      child: GestureDetector(
+                        onTap: () {
+                          _showBottomSheet(context, _task);
+                        },
+                        child: TaskTile(
+                          task: _task,
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ),
-            );
-          },
-          itemCount: _taskController.takList.length,
+                );
+              } else {
+                return Container();
+              }
+            },
+            itemCount: _taskController.taskList.length,
+          ),
         ),
       );
 
@@ -257,15 +280,17 @@ class _HomePageState extends State<HomePage> {
                   : _buildBottomSheet(
                       label: 'Task Completed',
                       onTap: () {
+                        _taskController.markTaskCompleted(task.id!);
                         Get.back();
                       },
                       color: primaryClr),
               _buildBottomSheet(
                   label: 'Delete Task',
                   onTap: () {
+                    _taskController.deleteTasks(task: task);
                     Get.back();
                   },
-                  color: primaryClr),
+                  color: Colors.red[300]!),
               Divider(color: Get.isDarkMode ? Colors.grey : darkGreyClr),
               _buildBottomSheet(
                   label: 'Cancel',
@@ -313,7 +338,7 @@ class _HomePageState extends State<HomePage> {
         ),
       );
 
-  _timeConverter(String time){
+  _timeConverter(String time) {
     var date = DateFormat.jm().parse(time);
     return DateFormat('HH:mm').format(date);
   }
