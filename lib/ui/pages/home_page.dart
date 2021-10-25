@@ -99,6 +99,15 @@ class _HomePageState extends State<HomePage> {
           // _taskController.taskList.isNotEmpty ? _showTasks() : _noTaskMessage(),
         ],
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Get.snackbar('Done', 'All tasks have been removed !',
+              snackPosition: SnackPosition.BOTTOM);
+          notifyHelper.deleteAllNotifications();
+          _taskController.deleteAllTasks();
+        },
+        child: const Icon(Icons.cleaning_services_outlined),
+      ),
     );
   }
 
@@ -163,9 +172,18 @@ class _HomePageState extends State<HomePage> {
             itemBuilder: (context, index) {
               //? task item from tasks list
               var _task = _taskController.taskList[index];
-
               if (_task.repeat == 'Daily' ||
-                  _task.date == DateFormat.yMd().format(_selectedDate)) {
+                  _task.date == DateFormat.yMd().format(_selectedDate) ||
+                  (_task.repeat == 'Weekly' &&
+                      _selectedDate
+                                  .difference(
+                                      DateFormat.yMd().parse(_task.date!))
+                                  .inDays %
+                              7 ==
+                          0) ||
+                  (_task.repeat == 'Monthly' &&
+                      DateFormat.yMd().parse(_task.date!).day ==
+                          _selectedDate.day)) {
                 //? Get hour and minutes from string e.g 15:30
                 int hour = int.parse(
                     _timeConverter(_task.startTime!).toString().split(':')[0]);
@@ -281,6 +299,7 @@ class _HomePageState extends State<HomePage> {
                       label: 'Task Completed',
                       onTap: () {
                         _taskController.markTaskCompleted(task.id!);
+                        notifyHelper.deleteNotification(task.id!);
                         Get.back();
                       },
                       color: primaryClr),
@@ -288,6 +307,7 @@ class _HomePageState extends State<HomePage> {
                   label: 'Delete Task',
                   onTap: () {
                     _taskController.deleteTasks(task: task);
+                    notifyHelper.deleteNotification(task.id!);
                     Get.back();
                   },
                   color: Colors.red[300]!),

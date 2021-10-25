@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_native_timezone/flutter_native_timezone.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
@@ -15,7 +16,7 @@ class NotifyHelper {
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
 
-  //+ Flag new
+  //+ Stream listener
   String selectedNotificationPayload = '';
   final BehaviorSubject<String> selectNotificationSubject =
       BehaviorSubject<String>();
@@ -23,9 +24,7 @@ class NotifyHelper {
   initializationNotification() async {
     //? Time zone initialization for scheduled notification
     tz.initializeTimeZones();
-    // tz.setLocalLocation(tz.getLocation(timeZoneName));
 
-    //+ Flag new
     _configureSelectNotificationSubject();
     await _configureLocalTimeZone();
 
@@ -60,7 +59,7 @@ class NotifyHelper {
       //? For testing we send constant values
       // selectNotification(payload!);
       // selectNotification('hello|mohamed|salama');
-      //+ Flag new
+      //+ Stream .add?
       selectNotificationSubject.add(payload!);
     });
   }
@@ -106,44 +105,109 @@ class NotifyHelper {
   //? Scheduled notification
   scheduledNotification(int hour, int minutes, Task task) async {
     await flutterLocalNotificationsPlugin.zonedSchedule(
-      //+ Flag new
+      //- notification details
       task.id!,
       task.title!,
       task.note!,
-      // tz.TZDateTime.now(tz.local).add(const Duration(seconds: 5)),
-      _nextInstanceOfTenAM(hour, minutes),
+      //- TZDateTime
+      _nextInstanceOfTenAM(
+          hour, minutes, task.remind!, task.repeat!, task.date!),
+      //- NotificationDetails
       const NotificationDetails(
-          android: AndroidNotificationDetails(
-              'your channel id', 'your channel name',
-              channelDescription: 'your channel description')),
+        android: AndroidNotificationDetails(
+            'your channel id', 'your channel name',
+            channelDescription: 'your channel description'),
+      ),
+      //- to avoid doze mode
       androidAllowWhileIdle: true,
+      //- compute date GMT
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
-      //+ Flag new
+      //- compare time
       matchDateTimeComponents: DateTimeComponents.time,
+      //- arguments
       payload: '${task.title}|${task.note}|${task.startTime}|',
     );
   }
 
-  //+ Flag new
-  _nextInstanceOfTenAM(int hour, int minutes) {
+  //? in case of completed and deleted tasks
+  deleteNotification(int id) async {
+    try {
+      await flutterLocalNotificationsPlugin.cancel(id);
+      debugPrint('Notification is deleted');
+    } catch (e) {
+      debugPrint('Cannot delete notification error: $e');
+    }
+  }
+
+  //? in case of clear all tasks
+  deleteAllNotifications() async {
+    try {
+      await flutterLocalNotificationsPlugin.cancelAll();
+      debugPrint('All notifications have been deleted');
+    } catch (e) {
+      debugPrint('Cannot delete all notifications error: $e');
+    }
+  }
+
+  //? TZDateTime
+  _nextInstanceOfTenAM(
+      int hour, int minutes, int remind, String repeat, String date) {
     final tz.TZDateTime now = tz.TZDateTime.now(tz.local);
+
+    var formattedDate = DateFormat.yMd().parse(date);
+    //- convert to local date
+    final tz.TZDateTime fd = tz.TZDateTime.from(formattedDate,tz.local);
+
     tz.TZDateTime scheduledDate =
-        tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minutes);
+        tz.TZDateTime(tz.local, fd.year, fd.month, fd.day, hour, minutes);
+
+
+    //? Invoke remind
+    scheduledDate = _afterRemind(remind, scheduledDate);
+
+    //? Invoke repeat
     if (scheduledDate.isBefore(now)) {
-      scheduledDate = scheduledDate.add(const Duration(days: 1));
+      if (repeat == 'Daily') {
+        scheduledDate = tz.TZDateTime(tz.local, now.year, now.month,
+            (formattedDate.day) + 1, hour, minutes);
+      } else if (repeat == 'Weekly') {
+        scheduledDate = tz.TZDateTime(tz.local, now.year, now.month,
+            (formattedDate.day) + 7, hour, minutes);
+      } else if (repeat == 'Monthly') {
+        scheduledDate = tz.TZDateTime(tz.local, now.year,
+            (formattedDate.month) + 1, formattedDate.day, hour, minutes);
+      }
+      scheduledDate = _afterRemind(remind, scheduledDate);
+    }
+
+
+
+    print('final scheduled date: $scheduledDate');
+    return scheduledDate;
+  }
+
+  tz.TZDateTime _afterRemind(int remind, tz.TZDateTime scheduledDate) {
+    if (remind == 5) {
+      scheduledDate = scheduledDate.subtract(const Duration(minutes: 5));
+    } else if (remind == 10) {
+      scheduledDate = scheduledDate.subtract(const Duration(minutes: 10));
+    } else if (remind == 15) {
+      scheduledDate = scheduledDate.subtract(const Duration(minutes: 15));
+    } else if (remind == 20) {
+      scheduledDate = scheduledDate.subtract(const Duration(minutes: 20));
     }
     return scheduledDate;
   }
 
-  //+ Flag new
+  //? initialization of timezone flutter_native_timezone
   Future<void> _configureLocalTimeZone() async {
     tz.initializeTimeZones();
     final String timeZoneName = await FlutterNativeTimezone.getLocalTimezone();
     tz.setLocalLocation(tz.getLocation(timeZoneName));
   }
 
-  //+ Flag new
+  //+ Notification screen action
   void _configureSelectNotificationSubject() {
     selectNotificationSubject.stream.listen((String payload) async {
       debugPrint('My payload is ' + payload);

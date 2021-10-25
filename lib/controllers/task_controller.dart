@@ -7,7 +7,7 @@ class TaskController extends GetxController {
   final RxList<Task> taskList = <Task>[].obs;
 
   //?? return all tasks
-  Future<void> getTasks() async{
+  Future<void> getTasks() async {
     final tasks = await DBHelper.query();
     taskList.assignAll(tasks.map((e) => Task.fromMap(e)).toList());
   }
@@ -18,13 +18,19 @@ class TaskController extends GetxController {
   }
 
   //? delete task from database
-  deleteTasks({Task? task}) async{
+  deleteTasks({Task? task}) async {
     await DBHelper.delete(task);
     getTasks();
   }
 
+  //? delete all task from database
+  deleteAllTasks() async {
+    await DBHelper.deleteAll();
+    getTasks();
+  }
+
   //? update database
-  markTaskCompleted(int id) async{
+  markTaskCompleted(int id) async {
     await DBHelper.update(id);
     getTasks();
   }

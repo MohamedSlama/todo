@@ -47,6 +47,12 @@ class DBHelper {
         .delete(_tableName, where: 'id = ?', whereArgs: [task!.id]);
   }
 
+  static Future<int> deleteAll() async {
+    debugPrint('delete all method called !!');
+
+    return await _db!.delete(_tableName);
+  }
+
   static Future<int> update(int id) async {
     debugPrint('update method called !!');
     return await _db!.rawUpdate('''
